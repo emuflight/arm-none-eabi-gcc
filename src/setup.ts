@@ -9,6 +9,8 @@ import * as unzipper from 'unzipper'
 
 import * as gcc from '../src/gcc'
 
+const fetch = require('@vercel/fetch-retry')(require('node-fetch'))
+
 function urlExt(s: string): string {
   const u = url.parse(s)
   const components = u.path?.split('/')
@@ -30,7 +32,8 @@ export async function install(release: string, directory: string, platform?: str
 async function retryInstall(maxRetries: number, release: string, directory: string, platform?: string): Promise<void> {
   const distUrl = gcc.distributionUrl(release, platform || process.platform)
   console.log(`downloading gcc ${release} from ${distUrl}`)
-  const resp = await fetch(distUrl)
+
+  const resp = await fetch(distUrl, {maxTimeout: 180000})
   if (resp.status !== 200) {
     throw new Error(`invalid HTTP response code ${resp.status}`)
   }
